@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>リアルタイムLINE風チャット</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #e5ddd5;
+}
+
+#chat-box {
+  width: 360px;
+  height: 600px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.message {
+  max-width: 70%;
+  padding: 8px 10px;
+  margin: 5px 0;
+  border-radius: 12px;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+.from-guest {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+.from-bridegroom {
+  align-self: flex-end;
+  background: #dcf8c6;
+}
+
+#input-area {
+  width: 360px;
+  display: flex;
+  margin-top: 5px;
+}
+
+#input-msg {
+  flex: 1;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+}
+
+#send-btn {
+  margin-left: 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 16px;
+  background: #128C7E;
+  color: #fff;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div>
+  <div id="chat-box"></div>
+  <div id="input-area">
+    <input type="text" id="input-msg" placeholder="メッセージを入力">
+    <button id="send-btn">送信</button>
+  </div>
+</div>
+
+<!-- Firebase SDK (モジュール版) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+
+  // 🔑 Firebase 設定情報（自分のプロジェクト情報に置き換えてください）
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWQzM3HeesXei6P5obNVeNK6Z73izL9NM",
+    authDomain: "genially-9c72e.firebaseapp.com",
+    databaseURL: "https://genially-9c72e-default-rtdb.firebaseio.com",
+    projectId: "genially-9c72e",
+    storageBucket: "genially-9c72e.firebasestorage.app",
+    messagingSenderId: "321254192413",
+    appId: "1:321254192413:web:e46aedf0113067647e1df4",
+    measurementId: "G-QC0WL00YT2"
+  };
+
+  // Firebase 初期化
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const messagesRef = ref(db, 'messages');
+
+  // DOM要素
+  const chatBox = document.getElementById('chat-box');
+  const inputMsg = document.getElementById('input-msg');
+  const sendBtn = document.getElementById('send-btn');
+
+  // メッセージ表示関数
+  function addMessage(text, type) {
+    const msg = document.createElement('div');
+    msg.className = 'message ' + type;
+    msg.textContent = text;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // メッセージ送信
+  sendBtn.addEventListener('click', () => {
+    const text = inputMsg.value.trim();
+    if (text !== '') {
+      push(messagesRef, {
+        text: text,
+        type: 'from-guest', // 'from-bridegroom' に変えれば新郎新婦メッセージ
+        timestamp: Date.now()
+      });
+      inputMsg.value = '';
+    }
+  });
+
+  inputMsg.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendBtn.click();
+  });
+
+  // Firebase リアルタイム受信
+  onChildAdded(messagesRef, (snapshot) => {
+    const data = snapshot.val();
+    addMessage(data.text, data.type);
+  });
+</script>
+
+</body>
+</html>
